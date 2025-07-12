@@ -1,6 +1,7 @@
 package com.learn.spring.boot.web.springbootweb.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.learn.spring.boot.web.springbootweb.annotations.EmployeeRoleValidation;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -49,14 +50,12 @@ public class EmployeeDTO {
     @PastOrPresent(message = "Date Of Joining of employee cannot be future")
     private LocalDate dateOfJoining;
 
-    @NotBlank(message = "IsActive of employee cannot be blank")
     @NotNull(message = "Required field in Employee: isActive")
-    @NotEmpty(message = "IsActive of employee cannot be blank")
     private Boolean isActive;
 
     @NotBlank(message = "Role of employee cannot be blank")
     @NotEmpty(message = "Role of employee cannot be null")
-    @Pattern(regexp = "^(ADMIN|USER)$", message = "Role of employee should be either USER or ADMIN")
+    @EmployeeRoleValidation
     private String role;
 
     @NotNull(message = "Salary of employee cannot be null")
