@@ -2,6 +2,7 @@ package com.learn.spring.boot.web.springbootweb.service;
 
 import com.learn.spring.boot.web.springbootweb.dto.EmployeeDTO;
 import com.learn.spring.boot.web.springbootweb.entities.Employee;
+import com.learn.spring.boot.web.springbootweb.exceptions.ResourceNotFoundException;
 import com.learn.spring.boot.web.springbootweb.repositories.EmployeeRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.util.ReflectionUtils;
@@ -54,24 +55,23 @@ public class EmployeeService {
     }
 
     public EmployeeDTO updateEmployeeById(EmployeeDTO employeeDTO, Long employeeId) {
+        isExistByEmployeeId(employeeId);
+
         Employee newEmployee = modelMapper.map(employeeDTO, Employee.class);
         newEmployee.setId(employeeId);
+
         return modelMapper.map(employeeRepository.save(newEmployee), EmployeeDTO.class);
 
     }
 
     public Boolean deleteEmployeeById(Long employeeId) {
-        boolean exists = isExistByEmployeeId(employeeId);
-        if (!exists) return false;
-
+        isExistByEmployeeId(employeeId);
         employeeRepository.deleteById(employeeId);
         return true;
     }
 
     public EmployeeDTO updatePartialEmployeeById(Map<String, Object> updates, Long employeeId) {
-
-        boolean exists = isExistByEmployeeId(employeeId);
-        if (!exists) return null;
+        isExistByEmployeeId(employeeId);
 
         Employee existingEmployee = employeeRepository.findById(employeeId).get();
         updates.forEach((field, value) ->{
@@ -79,11 +79,12 @@ public class EmployeeService {
             fieldToBeUpdated.setAccessible(true);
             ReflectionUtils.setField(fieldToBeUpdated, existingEmployee, value);
         });
+
         return modelMapper.map(employeeRepository.save(existingEmployee), EmployeeDTO.class);
     }
 
-    private boolean isExistByEmployeeId(Long employeeId) {
+    private void isExistByEmployeeId(Long employeeId) {
         boolean exists = employeeRepository.existsById(employeeId);
-        return exists;
+        if (!exists) throw new ResourceNotFoundException("Employee not exist with id: "+ employeeId);
     }
 }
