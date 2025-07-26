@@ -5,6 +5,8 @@ import com.learn.spring.boot.web.springbootweb.entities.Employee;
 import com.learn.spring.boot.web.springbootweb.exceptions.ResourceNotFoundException;
 import com.learn.spring.boot.web.springbootweb.repositories.EmployeeRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.stereotype.Service;
 
@@ -30,10 +32,28 @@ public class EmployeeService {
                 .map(employee1 -> modelMapper.map(employee1, EmployeeDTO.class));
     }
 
-    public List<EmployeeDTO> getAllEmployees() {
+    /*public List<EmployeeDTO> getAllEmployees() {
         List<Employee> employees = employeeRepository.findAll();
         return employees.stream()
                 .map(employee -> modelMapper.map(employee, EmployeeDTO.class))
+                .collect(Collectors.toList());
+    }*/
+
+    public Page<EmployeeDTO> getAllEmployeesWithPageable(Integer age, Pageable pageable) {
+        Page<Employee> employees = (age == null)
+                ? employeeRepository.findAll(pageable)
+                : employeeRepository.findByAge(age, pageable);
+
+        return employees.map(emp -> modelMapper.map(emp, EmployeeDTO.class));
+    }
+
+    public List<EmployeeDTO> getAllEmployees(Integer age, Pageable pageable) {
+        Page<Employee> page = (age == null)
+                ? employeeRepository.findAll(pageable)
+                : employeeRepository.findByAge(age, pageable);
+
+        return page.stream()
+                .map(emp -> modelMapper.map(emp, EmployeeDTO.class))
                 .collect(Collectors.toList());
     }
 
@@ -56,9 +76,10 @@ public class EmployeeService {
 
     public EmployeeDTO updateEmployeeById(EmployeeDTO employeeDTO, Long employeeId) {
         isExistByEmployeeId(employeeId);
-
+        Employee employee = employeeRepository.findById(employeeId).get();
         Employee newEmployee = modelMapper.map(employeeDTO, Employee.class);
         newEmployee.setId(employeeId);
+        newEmployee.setCreatedAt(employee.getCreatedAt());
 
         return modelMapper.map(employeeRepository.save(newEmployee), EmployeeDTO.class);
 

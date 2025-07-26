@@ -43,9 +43,11 @@ public class DepartmentService {
 
     public DepartmentDTO updateDepartment(DepartmentDTO departmentDTO, Long departmentId) {
         isExistByDepartmentId(departmentId);
-        Department department = modelMapper.map(departmentDTO, Department.class);
-        department.setId(departmentId);
-        return modelMapper.map(departmentRepository.save(department), DepartmentDTO.class);
+        Department department =departmentRepository.findById(departmentId).get();
+        Department newDepartment = modelMapper.map(departmentDTO, Department.class);
+        newDepartment.setId(departmentId);
+        newDepartment.setCreatedTime(department.getCreatedTime());
+        return modelMapper.map(departmentRepository.save(newDepartment), DepartmentDTO.class);
     }
 
     public Boolean deleteDepartmentById(Long departmentId) {

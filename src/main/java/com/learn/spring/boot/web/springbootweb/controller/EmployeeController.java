@@ -4,6 +4,10 @@ import com.learn.spring.boot.web.springbootweb.dto.EmployeeDTO;
 import com.learn.spring.boot.web.springbootweb.exceptions.ResourceNotFoundException;
 import com.learn.spring.boot.web.springbootweb.service.EmployeeService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,6 +26,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.learn.spring.boot.web.springbootweb.constants.Constants.ACS_DIRECTION;
+import static com.learn.spring.boot.web.springbootweb.constants.Constants.DESC_DIRECTION;
+import static com.learn.spring.boot.web.springbootweb.constants.Constants.PAGE_NUMBER;
+import static com.learn.spring.boot.web.springbootweb.constants.Constants.PAGE_SIZE;
+
 @RestController
 @RequestMapping("/employees")
 public class EmployeeController {
@@ -39,10 +48,46 @@ public class EmployeeController {
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: "+ employeeId));
     }
 
+    @GetMapping("/page")
+    public ResponseEntity<Page<EmployeeDTO>> getAllEmployeesWithPageable(
+            @RequestParam(required = false) Integer age,
+            @RequestParam(defaultValue =PAGE_NUMBER) int page,
+            @RequestParam(defaultValue = PAGE_SIZE) int size,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = ACS_DIRECTION) String direction) {
+
+        Sort sort = Sort.unsorted();
+
+        if (sortBy != null && !sortBy.isEmpty()) {
+            sort = direction.equalsIgnoreCase(DESC_DIRECTION)
+                    ? Sort.by(sortBy).descending()
+                    : Sort.by(sortBy).ascending();
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<EmployeeDTO> result = employeeService.getAllEmployeesWithPageable(age, pageable);
+        return ResponseEntity.ok(result);
+    }
+
     @GetMapping
-    public ResponseEntity<List<EmployeeDTO>> getAllEmployees(@RequestParam(required = false, name = "age") Integer age,
-                                                             @RequestParam(required = false) String sortBy) {
-        return ResponseEntity.ok((List<EmployeeDTO>) employeeService.getAllEmployees());
+    public ResponseEntity<List<EmployeeDTO>> getAllEmployees(
+            @RequestParam(required = false) Integer age,
+            @RequestParam(defaultValue =PAGE_NUMBER) int page,
+            @RequestParam(defaultValue = PAGE_SIZE) int size,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = ACS_DIRECTION) String direction) {
+
+        Sort sort = Sort.unsorted();
+
+        if (sortBy != null && !sortBy.isEmpty()) {
+            sort = direction.equalsIgnoreCase(DESC_DIRECTION)
+                    ? Sort.by(sortBy).descending()
+                    : Sort.by(sortBy).ascending();
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        List<EmployeeDTO> result = employeeService.getAllEmployees(age, pageable);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping
